@@ -5,40 +5,44 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Product extends Model
+class ReportPurchase extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'brand_id',
         'category_id',
+        'product_id',
+        'transaction_purchase_id',
         'name',
-        'category',
         'purchase_price',
         'sale_price',
-        'stock',
-        'image'
+        'quantity',
+        'subtotal',
+        'profit',
+        'date',
+        'action'
     ];
 
-    // relasi ke transaksi pembelian untuk mengirimkan data
+    // relasi ke tabel transaction pembelian utk ambil data
     public function transaction_purchase()
     {
-        return $this->hasMany(TransactionPurchase::class, 'product_id');
+        return $this->belongsTo(TransactionPurchase::class);
     }
 
-    // relasi ke transaksi penjualan utk mengirimkan data
-    public function transaction_sale()
+    // relasi ke tabel produk
+    public function product()
     {
-        return $this->hasMany(TransactionSale::class, 'product_id');
+        return $this->belongsTo(Product::class);
     }
 
-    // relasi untuk mengambil data tabel brand/merek
+    // relasi utk ambik data di tabel brand
     public function brand()
     {
         return $this->belongsTo(Brand::class);
     }
 
-    // relasi untuk mengambil data tabel kategori
+    // relasi pengambilan data di tabel kategori
     public function category()
     {
         return $this->belongsTo(Category::class);

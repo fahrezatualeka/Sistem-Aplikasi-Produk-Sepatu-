@@ -5,8 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\Transaction;
 use App\Models\Report;
+use App\Models\ReportPurchase;
+use App\Models\ReportSale;
+use App\Models\TransactionPurchase;
+use App\Models\TransactionSale;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use App\Models\Brand;
+use App\Models\Category;
 
 class ProductController extends Controller
 {
@@ -18,9 +24,13 @@ class ProductController extends Controller
     public function index()
     {
         $data = Product::orderBy('created_at', 'desc')->get(); // mengambil semua data diproduk dan mengurutkannya dari yang terbaru
+
+        $brands = Brand::all(); // ambil semua brand
+        $categories = Category::all(); // ambil semua kategori
+
         
          // menampilkan view dengan data produk
-        return view('product.index', compact('data'));
+        return view('product.index', compact('data', 'brands', 'categories'));
     }
 
     /**
@@ -38,37 +48,41 @@ class ProductController extends Controller
     // fungsi tambah data berhasil    
     public function store(Request $request)
     {
-
-        //validasi input
         $request->validate([
-            'name' => 'required',
-            'category' => 'required|in:training,running,originals,outdoor',
-            'purchase_price' => 'required|numeric',
-            'sale_price' => 'required|numeric',
-            'stock' => 'required|integer',
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'date' => 'required|date',
-            'description' => 'required'
+            'brand_id' => 'required|array',
+            'brand_id.*' => 'integer|exists:brands,id',
+            'category_id' => 'required|array',
+            'category_id.*' => 'integer|exists:categories,id',
+            'name' => 'required|array',
+            'name.*' => 'string',
+            'purchase_price' => 'required|array',
+            'purchase_price.*' => 'numeric',
+            'sale_price' => 'required|array',
+            'sale_price.*' => 'numeric',
+            'stock' => 'required|array',
+            'stock.*' => 'integer',
+            'image' => 'sometimes|nullable|array',
+            'image.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
     
-        // simpan  gambar ke penyimpanan
-        if ($request->hasFile('image')) {
-            $image = $request->file('image')->store('images', 'public');
-        } else {
-            return redirect()->back()->with('error', 'Gambar wajib diunggah.');
+        foreach ($request->name as $key => $name) {
+            $imagePath = null;
+    
+            // cek apakah ada file gambar yang diunggah
+            if ($request->hasFile("image.$key")) {
+                $imagePath = $request->file("image.$key")->store('images', 'public');
+            }
+    
+            Product::create([
+                'brand_id' => $request->brand_id[$key],
+                'category_id' => $request->category_id[$key],
+                'name' => $name,
+                'purchase_price' => $request->purchase_price[$key],
+                'sale_price' => $request->sale_price[$key],
+                'stock' => $request->stock[$key],
+                'image' => $imagePath, // Jika kosong, akan bernilai null
+            ]);
         }
-    
-        // menyimpan produk ke database
-        Product::create([
-            'name' => $request->name,
-            'category' => $request->category,
-            'purchase_price' => $request->purchase_price,
-            'sale_price' => $request->sale_price,
-            'stock' => $request->stock,
-            'image' => $image,
-            'date' => $request->date,
-            'description' => $request->description
-        ]);
     
         return redirect()->route('product.index')->with('success', 'Data berhasil ditambah!');
     }
@@ -90,65 +104,40 @@ class ProductController extends Controller
     }
 
     // proses simpan daata yg diedit
+
     public function update(Request $request, $id)
     {
         $request->validate([
-            'name' => 'nullable|string',
-            'category' => 'nullable|in:training,running,originals,outdoor',
+            'name' => 'required|string',
             'purchase_price' => 'nullable|numeric',
             'sale_price' => 'nullable|numeric',
             'stock' => 'nullable|integer',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'date' => 'nullable|date',
-            'description' => 'nullable|string'
         ]);
-    
+
         $product = Product::findOrFail($id);
-    
-        // *cek apakah ada gambar baru yang diunggah
+
+        // cek apakah ada gambar baru yang diunggah
         if ($request->hasFile('image')) {
-            // Simpan gambar baru
             $image = $request->file('image')->store('images', 'public');
-    
+
             // hapus gambar lama jika ada
             if ($product->image) {
                 Storage::disk('public')->delete($product->image);
             }
         } else {
-            // jika tidak ada gambar baru, gunakan gambar lama
             $image = $product->image;
         }
-    
-        // simpan data lama untuk perbandingan**
-        $oldSalePrice = $product->sale_price;
-        $oldPurchasePrice = $product->purchase_price;
-        $oldName = $product->name;
-    
-        // update data produk
+
+        // perbarui data produk
         $product->update([
-            'name' => $request->name ?? $product->name,
-            'category' => $request->category ?? $product->category, // kategori tetap bisa diperbarui meskipun readonly
-            'purchase_price' => $request->purchase_price ?? $product->purchase_price,
-            'sale_price' => $request->sale_price ?? $product->sale_price,
-            'stock' => $request->stock ?? $product->stock,
-            'image' => $image, // gunakan gambar baru jika ada, atau tetap gunakan gambar lama
-            'date' => $request->date ?? $product->date,
-            'description' => $request->description ?? $product->description
+            'name' => $request->filled('name') ? $request->name : $product->name,
+            'purchase_price' => $request->filled('purchase_price') ? $request->purchase_price : $product->purchase_price,
+            'sale_price' => $request->filled('sale_price') ? $request->sale_price : $product->sale_price,
+            'stock' => $request->filled('stock') ? $request->stock : $product->stock,
+            'image' => $image,
         ]);
-    
-        // **update transaksi terkait produk (jika ada perubahan harga jual)**
-        if ($request->sale_price !== null && $request->sale_price != $oldSalePrice) {
-            Transaction::where('product_id', $id)->update([
-                'price' => $request->sale_price
-            ]);
-        }
-    
-        // update laporan terkait produk
-        Report::where('product_id', $id)->update([
-            'sale_price' => $request->sale_price ?? $oldSalePrice,
-            'purchase_price' => $request->purchase_price ?? $oldPurchasePrice
-        ]);
-    
+
         return redirect()->route('product.index')->with('success', 'Data berhasil diperbarui!');
     }
 
@@ -158,19 +147,11 @@ class ProductController extends Controller
     // penghapusan data
     public function destroy($id)
     {
-        $product = Product::findOrFail($id);
+            $data = Product::findOrFail($id);
     
-        // hapus gambar jika ada
-        if ($product->image) {
-            Storage::disk('public')->delete($product->image);
-        }
+            // hapus produk berdasarkan id dari data
+            $data->delete();
     
-        // hapus transaksi dan laporan terkait produk ini
-        Transaction::where('product_id', $id)->delete();
-        Report::where('product_id', $id)->delete();
-    
-        $product->delete();
-    
-        return redirect()->route('product.index')->with('success', 'Data berhasil dihapus!');
+            return redirect()->route('product.index')->with('success', 'Data berhasil dihapus!');
     }
 }

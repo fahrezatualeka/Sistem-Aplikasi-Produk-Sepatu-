@@ -4,25 +4,33 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Product;
-use App\Models\Transaction;
+use App\Models\TransactionPurchase;
+use App\Models\TransactionSale;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        // total stok keseluruhan
-        $totalStock = Product::sum('stock');
+        // menghitung total stok keseluruhan
+        $product = Product::sum('stock');
+        $purchaseProduct = Product::sum('purchase_price');
+        $saleProduct = Product::sum('sale_price');
+        $profitProduct = $saleProduct - $purchaseProduct;
 
-        // total harga beli & harga jual keseluruhan
-        $totalPurchasePrice = Product::sum('purchase_price');
-        $totalSalePrice = Product::sum('sale_price');
-        $totalSelisihPrice = $totalPurchasePrice-$totalSalePrice ;
+        // menghitung transaksi pembelian
+        $purchase = TransactionPurchase::count();
+        $pricePurchase = TransactionPurchase::sum('price');
+        $totalPurchase = TransactionPurchase::sum('subtotal');
+
+        // menghitung transaksi penjualan
+        $sale = TransactionSale::count();
+        $priceSale = TransactionSale::sum('price');
+        $totalSale = TransactionSale::sum('subtotal');
 
         return view('dashboard', compact(
-            'totalStock',
-            'totalPurchasePrice',
-            'totalSalePrice',
-            'totalSelisihPrice',
+            'product', 'purchaseProduct', 'saleProduct', 'profitProduct', 
+            'purchase', 'pricePurchase', 'totalPurchase', 
+            'sale', 'priceSale', 'totalSale'
         ));
     }
 }

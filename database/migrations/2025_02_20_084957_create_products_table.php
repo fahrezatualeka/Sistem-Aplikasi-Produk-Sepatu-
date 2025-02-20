@@ -13,14 +13,13 @@ return new class extends Migration
     {
         Schema::create('products', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('brand_id')->constrained('brands')->onDelete('cascade'); // relasi ke tabel migration brand
+            $table->foreignId(column: 'category_id')->constrained('categories')->onDelete('cascade'); // relasi ke tabel migration kategori
             $table->string('name');
-            $table->enum('category', ['training', 'running', 'originals', 'outdoor']);
             $table->integer('purchase_price');
             $table->integer('sale_price');
             $table->integer('stock');
             $table->string('image')->nullable();
-            $table->date('date');
-            $table->text('description')->nullable();
             $table->timestamps();
         });
     }

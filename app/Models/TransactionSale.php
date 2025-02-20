@@ -5,14 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Transaction extends Model
+class TransactionSale extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'product_id',
         'name',
-        'transaction_type',
         'quantity',
         'price',
         'subtotal',
@@ -20,7 +19,7 @@ class Transaction extends Model
     ];
 
     
-    // relasi ke tabel produk (satu detail merujuk ke satu produk).
+        // relasi ke tabel produk untuk mengambil data.
     public function product()
     {
         return $this->belongsTo(Product::class);
@@ -38,9 +37,9 @@ class Transaction extends Model
     }
 
     // 1 data terkait ke tabel report dihubungkan pada kolom transaksi (setaip transaksi memiliki 1 laporan)
-    public function report()
+    public function report_sale()
     {
-        return $this->hasOne(Report::class, 'transaction_id', 'id');
+        return $this->hasOne(ReportSale::class, 'transaction_sale_id', 'id');
     }
 
 }

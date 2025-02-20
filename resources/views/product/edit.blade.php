@@ -10,55 +10,44 @@
                 @method('PUT')
                 <div class="modal-body">
                     <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="name" class="form-label">Nama Produk</label>
-                        <input type="text" class="form-control" id="name" name="name" value="{{ $product->name }}" disabled>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="category" class="form-label">Kategori</label>
-                        <select class="form-control" id="category" name="category" disabled>
-                            <option value="training" {{ $product->category == 'training' ? 'selected' : '' }}>Training</option>
-                            <option value="running" {{ $product->category == 'running' ? 'selected' : '' }}>Running</option>
-                            <option value="originals" {{ $product->category == 'originals' ? 'selected' : '' }}>Originals</option>
-                            <option value="outdoor" {{ $product->category == 'outdoor' ? 'selected' : '' }} >Outdoor</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="purchase_price" class="form-label">Harga Pembelian</label>
-                        <input type="number" class="form-control" id="purchase_price" name="purchase_price" value="{{ $product->purchase_price }}" disabled>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="sale_price" class="form-label">Harga Penjualan</label>
-                        <input type="number" class="form-control" id="sale_price" name="sale_price" value="{{ $product->sale_price }}" disabled>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="stock" class="form-label">Stok</label>
-                        <input type="number" class="form-control" id="stock" name="stock" value="{{ $product->stock }}">
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="image" class="form-label">Gambar</label>
-                        {{-- matikan inputan gambar --}}
-                        {{-- <input type="file" class="form-control" id="image" name="image" value="{{ $product->image }}"> --}}
-                        <div class="mt-2">
-                            <img src="{{ asset('storage/' . $product->image) }}" width="80" class="img-thumbnail">
+                        <div class="col-md-6 mb-3">
+                            <label for="brand_name_{{ $product->id }}" class="form-label">Nama Merek</label>
+                            <input type="text" class="form-control" id="brand_name_{{ $product->id }}" name="brand_name" value="{{ $product->brand->name }}" disabled>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="category_name_{{ $product->id }}" class="form-label">Nama Kategori</label>
+                            <input type="text" class="form-control" id="category_name_{{ $product->id }}" name="category_name" value="{{ $product->category->name }}" disabled>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="name_{{ $product->id }}" class="form-label">Nama Produk</label>
+                            <input type="text" class="form-control" id="name_{{ $product->id }}" name="name" value="{{ old('name', $product->name) }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="purchase_price_{{ $product->id }}" class="form-label">Harga Pembelian</label>
+                            <input type="number" class="form-control" id="purchase_price_{{ $product->id }}" name="purchase_price" value="{{ old('purchase_price', $product->purchase_price) }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="sale_price_{{ $product->id }}" class="form-label">Harga Penjualan</label>
+                            <input type="number" class="form-control" id="sale_price_{{ $product->id }}" name="sale_price" value="{{ old('sale_price', $product->sale_price) }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="stock_{{ $product->id }}" class="form-label">Stok</label>
+                            <input type="number" class="form-control" id="stock_{{ $product->id }}" name="stock" value="{{ old('stock', $product->stock) }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="image_{{ $product->id }}" class="form-label">Gambar (Opsional)</label>
+                            <input type="file" class="form-control" id="image_{{ $product->id }}" name="image">
+                            @if($product->image)
+                                <div class="mt-2">
+                                    <img src="{{ asset('storage/' . $product->image) }}" width="80" class="img-thumbnail">
+                                </div>
+                            @endif
                         </div>
                     </div>
-                    <div class="col-12 mb-3">
-                        <label for="date" class="form-label">Tanggal</label>
-                        <input type="date" class="form-control" id="date" name="date" value="{{ $product->date }}" required>
-                    </div>
-                    <div class="col-12 mb-3">
-                        <label for="description" class="form-label">Deskripsi</label>
-                        <input type="text" class="form-control" id="description" name="description" value="{{ $product->description }}" required>
-                    </div>
-
                 </div>
-            </div>
-
-
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal"><i class="fa-solid fa-xmark"></i> Batal</button>
+                    <button type="submit" class="btn btn-success"><i class="fa-solid fa-floppy-disk"></i> Simpan</button>
                 </div>
             </form>
         </div>
